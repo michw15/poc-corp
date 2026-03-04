@@ -1,0 +1,13 @@
+server:
+  port: 8079
+
+spring:
+  application:
+    name: corpai-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: orchestrator
+          uri: http://localhost:8080
+          predicates:
+            - Path=/api/v1/**
