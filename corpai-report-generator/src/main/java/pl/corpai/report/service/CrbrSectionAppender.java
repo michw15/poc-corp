@@ -75,7 +75,7 @@ public class CrbrSectionAppender {
             return outputStream.toByteArray();
 
         } catch (Exception e) {
-            throw new RuntimeException("Błąd podczas dodawania sekcji CRBR do PDF", e);
+            throw new RuntimeException("Błąd podczas dodawania sekcji CRBR do PDF (etap: manipulacja dokumentem iText7): " + e.getMessage(), e);
         }
     }
 }

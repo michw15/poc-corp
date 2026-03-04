@@ -17,6 +17,7 @@ import pl.corpai.orchestrator.repository.AnalysisRequestRepository;
 import pl.corpai.orchestrator.repository.ReportRepository;
 import pl.corpai.report.service.CrbrSectionAppender;
 
+import java.net.URI;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -97,7 +98,13 @@ public class AnalysisOrchestrationService {
             // Step 5: Download PDF from Blob URL
             byte[] pdfBytes;
             try {
-                pdfBytes = restTemplate.getForObject(azureResponse.getBlobUrl(), byte[].class);
+                String blobUrl = azureResponse.getBlobUrl();
+                validateBlobUrl(blobUrl);
+                pdfBytes = restTemplate.getForObject(blobUrl, byte[].class);
+            } catch (IllegalArgumentException e) {
+                log.error("Nieprawidłowy Blob URL: {}", e.getMessage());
+                updateStatus(analysisId, AnalysisStatus.FAILED, "Nieprawidłowy URL raportu");
+                return;
             } catch (Exception e) {
                 log.error("Błąd pobierania PDF z Blob URL: {}", e.getMessage());
                 updateStatus(analysisId, AnalysisStatus.FAILED, "Błąd pobierania wygenerowanego raportu");
@@ -143,5 +150,26 @@ public class AnalysisOrchestrationService {
             }
             analysisRequestRepository.save(entity);
         });
+    }
+
+    private void validateBlobUrl(String blobUrl) {
+        if (blobUrl == null || blobUrl.isEmpty()) {
+            throw new IllegalArgumentException("Blob URL jest pusty");
+        }
+        try {
+            URI uri = URI.create(blobUrl);
+            String scheme = uri.getScheme();
+            String host = uri.getHost();
+            if (!"https".equalsIgnoreCase(scheme)) {
+                throw new IllegalArgumentException("Blob URL musi używać HTTPS: " + scheme);
+            }
+            if (host == null || !host.endsWith(".blob.core.windows.net")) {
+                throw new IllegalArgumentException("Blob URL musi wskazywać na Azure Blob Storage: " + host);
+            }
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Nieprawidłowy format Blob URL: " + e.getMessage(), e);
+        }
     }
 }

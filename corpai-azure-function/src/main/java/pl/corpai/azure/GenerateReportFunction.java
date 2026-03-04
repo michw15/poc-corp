@@ -90,10 +90,19 @@ public class GenerateReportFunction {
         } catch (Exception e) {
             log.error("Błąd podczas generowania raportu: {}", e.getMessage(), e);
             context.getLogger().severe("Błąd: " + e.getMessage());
-            return request.createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("{\"error\": \"" + e.getMessage().replace("\"", "'") + "\"}")
-                    .header("Content-Type", "application/json")
-                    .build();
+            try {
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", e.getMessage());
+                return request.createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(objectMapper.writeValueAsString(errorResponse))
+                        .header("Content-Type", "application/json")
+                        .build();
+            } catch (Exception jsonEx) {
+                return request.createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("{\"error\":\"Internal server error\"}")
+                        .header("Content-Type", "application/json")
+                        .build();
+            }
         }
     }
 }
