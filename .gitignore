@@ -1,0 +1,12 @@
+target/
+*.class
+*.jar
+*.war
+.env
+local.settings.json
+.DS_Store
+*.iml
+.idea/
+.mvn/
+!.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
